@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation - Abhängige Felder</title>
+    <script src="//api.bitrix24.com/api/v1/"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 30px;
+            text-align: center;
+            color: #333;
+            background: #f5f7fa;
+        }
+        .install-box {
+            max-width: 500px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        h1 { font-size: 22px; margin-bottom: 10px; }
+        p { color: #666; line-height: 1.5; }
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .status.success { background: #e8f5e9; color: #2e7d32; }
+        .status.error { background: #fce4ec; color: #c62828; }
+        .status.loading { background: #e3f2fd; color: #1565c0; }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #1565c0;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="install-box">
+        <h1>Abhängige Felder</h1>
+        <p>Das Plugin wird installiert und konfiguriert...</p>
+        <div id="status" class="status loading">
+            <span class="spinner"></span> Installation läuft...
+        </div>
+    </div>
+
+    <script>
+        BX24.init(async function() {
+            const statusEl = document.getElementById('status');
+
+            try {
+                // 1. Custom User Field Type registrieren
+                try {
+                    await callMethod('userfieldtype.add', {
+                        USER_TYPE_ID: 'depfields_widget',
+                        HANDLER: getHandlerUrl('field.html'),
+                        TITLE: 'Abhängige Felder',
+                        DESCRIPTION: 'Widget für abhängige/kaskadierende CRM-Felder'
+                    });
+                } catch (e) {
+                    // Typ existiert möglicherweise bereits - das ist OK
+                    if (!e.ex || !e.ex.error === 'ERROR_USERFIELD_TYPE_ALREADY_INSTALLED') {
+                        console.warn('UserFieldType Registrierung:', e);
+                    }
+                }
+
+                // 2. Standard-Konfiguration anlegen (falls noch nicht vorhanden)
+                const options = await callMethod('app.option.get');
+                if (!options || !options.depfields_deal) {
+                    await callMethod('app.option.set', {
+                        options: {
+                            depfields_deal: JSON.stringify({ configs: [] }),
+                            depfields_lead: JSON.stringify({ configs: [] }),
+                            depfields_contact: JSON.stringify({ configs: [] }),
+                            depfields_company: JSON.stringify({ configs: [] })
+                        }
+                    });
+                }
+
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '&#10003; Installation erfolgreich abgeschlossen!<br><br>' +
+                    '<small>Sie können die App jetzt über das Menü "Anwendungen" konfigurieren.<br>' +
+                    'Fügen Sie anschließend das Feld "Abhängige Felder" zu Ihren CRM-Karten hinzu.</small>';
+
+                // Installation bei Bitrix24 abschließen
+                BX24.installFinish();
+
+            } catch (error) {
+                console.error('Installationsfehler:', error);
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '&#10007; Installationsfehler: ' + (error.ex ? error.ex.error_description : error.message || error);
+            }
+        });
+
+        function callMethod(method, params) {
+            return new Promise((resolve, reject) => {
+                BX24.callMethod(method, params || {}, function(result) {
+                    if (result.error()) {
+                        reject(result.error());
+                    } else {
+                        resolve(result.data());
+                    }
+                });
+            });
+        }
+
+        function getHandlerUrl(page) {
+            // Aktuelle URL als Basis nehmen und nur den Dateinamen ersetzen
+            const currentUrl = window.location.href;
+            const basePath = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+            return basePath + page;
+        }
+    </script>
+</body>
+</html>

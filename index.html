@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhängige Felder - Einstellungen</title>
+    <script src="//api.bitrix24.com/api/v1/"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Ladebildschirm -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Lade Einstellungen...</p>
+    </div>
+
+    <!-- Hauptbereich -->
+    <div class="app-container">
+        <header class="app-header">
+            <h1>&#9881; Abhängige Felder</h1>
+            <p class="subtitle">Konfigurieren Sie kaskadierende Feld-Abhängigkeiten für Ihre CRM-Karten</p>
+        </header>
+
+        <!-- Entity-Typ Tabs -->
+        <div class="tabs-container" id="entityTabs">
+            <!-- Wird dynamisch gefüllt -->
+        </div>
+
+        <!-- Konfigurationsliste -->
+        <div class="content-area">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="Settings.addConfig()">
+                    + Neue Konfiguration
+                </button>
+            </div>
+
+            <div id="configContainer">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+
+            <!-- Konfigurationseditor (versteckt) -->
+            <div id="configEditor" style="display: none;">
+                <div class="editor-header">
+                    <button class="btn btn-back" onclick="Settings.backToList()">
+                        &larr; Zurück
+                    </button>
+                    <button class="btn btn-primary" id="saveBtn" onclick="Settings.saveConfig()">
+                        Speichern
+                    </button>
+                </div>
+
+                <div class="editor-form">
+                    <div class="form-group">
+                        <label for="configName">Name der Konfiguration:</label>
+                        <input type="text" id="configName" class="form-input"
+                               placeholder="z.B. Produktkategorie-Abhängigkeit"
+                               oninput="Settings.onConfigNameChange(this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rootField">Startfeld (Elternfeld):</label>
+                        <select id="rootField" class="form-input"
+                                onchange="Settings.onRootFieldChange(this.value)">
+                            <option value="">-- Startfeld wählen --</option>
+                        </select>
+                        <p class="form-hint">Wählen Sie das Feld, von dem die Abhängigkeitskette ausgeht.
+                           Nur Auswahllisten-Felder sind als Startfeld geeignet.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Abhängigkeitsregeln:</label>
+                        <p class="form-hint">Legen Sie fest, welche Felder bei welchem Wert des Startfelds angezeigt werden sollen.</p>
+                        <div id="rulesTree" class="rules-tree">
+                            <!-- Wird dynamisch gefüllt -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anleitung -->
+        <div class="help-section">
+            <h3>Anleitung</h3>
+            <ol>
+                <li><strong>Konfiguration erstellen:</strong> Klicken Sie auf "Neue Konfiguration" und wählen Sie ein Startfeld (Auswahlliste).</li>
+                <li><strong>Regeln definieren:</strong> Für jeden Wert des Startfelds legen Sie fest, welche Felder angezeigt und welche als Pflicht markiert werden.</li>
+                <li><strong>Verschachtelung:</strong> Wenn ein angezeigtes Feld auch eine Auswahlliste ist, können Sie weitere Unterabhängigkeiten definieren.</li>
+                <li><strong>Benutzerfeld erstellen:</strong> Erstellen Sie in der CRM-Karte ein neues Feld vom Typ "Abhängige Felder" und fügen Sie es zur Kartenansicht hinzu.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/settings.js"></script>
+    <script>
+        BX24.init(function() {
+            Settings.init();
+            BX24.fitWindow();
+        });
+    </script>
+</body>
+</html>
