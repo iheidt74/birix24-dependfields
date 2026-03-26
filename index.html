@@ -82,6 +82,9 @@
         <div class="help-section" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <button class="btn" onclick="showPage('settings')">Einstellungen</button>
             <button class="btn" onclick="showPage('help')">Hilfe &amp; Anleitung</button>
+            <button class="btn btn-sm" onclick="exportAllConfigs()" title="Alle Konfigurationen als JSON-Datei herunterladen">Export</button>
+            <button class="btn btn-sm" onclick="document.getElementById('importFile').click()" title="Konfigurationen aus JSON-Datei wiederherstellen">Import</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importAllConfigs(this)">
             <button class="btn btn-sm" onclick="showDebugInfo()" style="margin-left:auto;">Diagnose</button>
         </div>
         <div id="debugOutput" style="display:none; margin-top:8px; padding:12px; background:#f8f9fb; border-radius:8px; font-size:12px; font-family:monospace; white-space:pre-wrap;"></div>
@@ -325,6 +328,67 @@
                 helpEl.style.display = 'none';
             }
             BX24.fitWindow();
+        }
+
+        async function exportAllConfigs() {
+            try {
+                const allConfigs = await B24.loadAllConfigs();
+                const exportData = {
+                    app: 'depfields',
+                    version: 1,
+                    exportDate: new Date().toISOString(),
+                    configs: allConfigs
+                };
+                const json = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'depfields-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                Settings.showSuccess('Konfigurationen exportiert!');
+            } catch (e) {
+                Settings.showError('Export fehlgeschlagen: ' + (e.message || e));
+            }
+        }
+
+        async function importAllConfigs(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                if (!data.configs || data.app !== 'depfields') {
+                    Settings.showError('Ungültige Backup-Datei.');
+                    input.value = '';
+                    return;
+                }
+
+                if (!confirm('Alle aktuellen Konfigurationen werden durch die importierten ersetzt. Fortfahren?')) {
+                    input.value = '';
+                    return;
+                }
+
+                // Alle Entity-Typ Konfigurationen speichern
+                for (const [entityType, config] of Object.entries(data.configs)) {
+                    await B24.saveConfig(entityType, config);
+                }
+
+                Settings.showSuccess('Import erfolgreich! ' + Object.keys(data.configs).length + ' Konfiguration(en) wiederhergestellt.');
+
+                // Aktuelle Ansicht aktualisieren
+                await Settings.switchEntityType(Settings.currentEntityType);
+
+            } catch (e) {
+                Settings.showError('Import fehlgeschlagen: ' + (e.message || e));
+            }
+
+            input.value = '';
         }
 
         async function showDebugInfo() {
