@@ -106,6 +106,22 @@
                 <div class="step-icon">&#9679;</div>
                 <span>Placement: Unternehmen-Tab registrieren</span>
             </div>
+            <div class="step pending" id="step-mobile-deal">
+                <div class="step-icon">&#9679;</div>
+                <span>Mobile: Deal-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-mobile-lead">
+                <div class="step-icon">&#9679;</div>
+                <span>Mobile: Lead-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-mobile-contact">
+                <div class="step-icon">&#9679;</div>
+                <span>Mobile: Kontakt-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-mobile-company">
+                <div class="step-icon">&#9679;</div>
+                <span>Mobile: Unternehmen-Tab registrieren</span>
+            </div>
             <div class="step pending" id="step-config">
                 <div class="step-icon">&#9679;</div>
                 <span>Standardkonfiguration anlegen</span>
@@ -155,7 +171,25 @@
                 if (ok) hasPlacement = true;
             }
 
-            // 3. Standardkonfiguration anlegen
+            // 3. Mobile Placements registrieren
+            const mobilePlacements = [
+                { stepId: 'step-mobile-deal', placement: 'MOBILE_CRM_DEAL_DETAIL_TAB' },
+                { stepId: 'step-mobile-lead', placement: 'MOBILE_CRM_LEAD_DETAIL_TAB' },
+                { stepId: 'step-mobile-contact', placement: 'MOBILE_CRM_CONTACT_DETAIL_TAB' },
+                { stepId: 'step-mobile-company', placement: 'MOBILE_CRM_COMPANY_DETAIL_TAB' }
+            ];
+
+            for (const p of mobilePlacements) {
+                await runStep(p.stepId, async () => {
+                    await callMethod('placement.bind', {
+                        PLACEMENT: p.placement,
+                        HANDLER: handlerUrl,
+                        TITLE: 'Abhängige Felder'
+                    });
+                }, true);
+            }
+
+            // 4. Standardkonfiguration anlegen
             await runStep('step-config', async () => {
                 const options = await callMethod('app.option.get');
                 if (!options || !options.depfields_deal) {

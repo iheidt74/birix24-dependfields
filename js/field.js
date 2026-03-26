@@ -174,6 +174,7 @@ const FieldWidget = {
         if (!placement) return null;
         const placementId = placement.placement || '';
 
+        // Desktop und Mobile Placements
         if (placementId.includes('DEAL')) return 'deal';
         if (placementId.includes('LEAD')) return 'lead';
         if (placementId.includes('CONTACT')) return 'contact';
