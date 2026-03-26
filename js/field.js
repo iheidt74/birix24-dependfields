@@ -95,16 +95,21 @@ const FieldWidget = {
                     entityId = String(opts.ENTITY_VALUE_ID);
                 }
 
-                // 3. Fallback: ENTITY_ID Format "CRM_DEAL_123"
+                // 3. ENTITY_ID auswerten
                 if (opts.ENTITY_ID) {
-                    const parts = opts.ENTITY_ID.split('_');
-                    if (!entityId) {
-                        entityId = parts[parts.length - 1];
-                    }
-                    if (parts.length >= 2) {
-                        // Versuche Entity-Typ aus ENTITY_ID Prefix
-                        const prefix = parts.slice(0, -1).join('_');
-                        entityType = this.mapEntityPrefix(prefix);
+                    // Erst den ganzen String mappen (z.B. "CRM_DEAL" bei UserField Types)
+                    const fullMap = this.mapEntityPrefix(opts.ENTITY_ID);
+                    if (fullMap) {
+                        entityType = fullMap;
+                    } else {
+                        // Sonst splitten: "CRM_DEAL_123" → Prefix "CRM_DEAL", ID "123"
+                        const parts = opts.ENTITY_ID.split('_');
+                        const lastPart = parts[parts.length - 1];
+                        if (/^\d+$/.test(lastPart)) {
+                            if (!entityId) entityId = lastPart;
+                            const prefix = parts.slice(0, -1).join('_');
+                            entityType = this.mapEntityPrefix(prefix);
+                        }
                     }
                 }
 
