@@ -685,9 +685,17 @@ body {
     margin-top: 20px;
 }
 
+.help-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
 .help-section h3 {
     font-size: 16px;
+    font-weight: 700;
     margin-bottom: 12px;
+    color: var(--primary-dark);
 }
 
 .help-section ol {
@@ -703,6 +711,109 @@ body {
 
 .help-section li strong {
     color: var(--text);
+}
+
+.help-section ul {
+    padding-left: 18px;
+    margin: 8px 0;
+}
+
+.help-section ul li {
+    list-style-type: disc;
+}
+
+.help-section p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+/* Help Steps */
+.help-step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+
+.help-step-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.help-step-content {
+    flex: 1;
+    padding-top: 4px;
+}
+
+.help-step-content strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.help-step-content p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+/* Help Tips */
+.help-tip {
+    background: var(--primary-light);
+    border-left: 3px solid var(--primary);
+    padding: 10px 14px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13px;
+    color: var(--primary-dark);
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+/* Help Examples */
+.help-example {
+    background: var(--border-light);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 8px;
+    color: var(--text);
+}
+
+/* Help FAQ */
+.help-faq {
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 14px;
+}
+
+.help-faq:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.help-faq-q {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.help-faq-a {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
 }
 
 /* =============================================

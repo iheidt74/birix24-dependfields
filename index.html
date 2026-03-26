@@ -78,25 +78,227 @@
             </div>
         </div>
 
-        <!-- Anleitung -->
-        <div class="help-section">
-            <h3>Anleitung</h3>
-            <ol>
-                <li><strong>Konfiguration erstellen:</strong> Klicken Sie auf "Neue Konfiguration" und wählen Sie ein Startfeld (Auswahlliste).</li>
-                <li><strong>Regeln definieren:</strong> Für jeden Wert des Startfelds legen Sie fest, welche Felder angezeigt und welche als Pflicht markiert werden.</li>
-                <li><strong>Verschachtelung:</strong> Wenn ein angezeigtes Feld auch eine Auswahlliste ist, können Sie weitere Unterabhängigkeiten definieren.</li>
-                <li><strong>Tab in CRM-Karte:</strong> Nach der Installation erscheint automatisch der Tab "Abhängige Felder" in Ihren Deal-, Lead-, Kontakt- und Unternehmenskarten.</li>
-            </ol>
+        <!-- Navigation -->
+        <div class="help-section" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn" onclick="showPage('settings')">Einstellungen</button>
+            <button class="btn" onclick="showPage('help')">Hilfe &amp; Anleitung</button>
+            <button class="btn btn-sm" onclick="showDebugInfo()" style="margin-left:auto;">Diagnose</button>
         </div>
+        <div id="debugOutput" style="display:none; margin-top:8px; padding:12px; background:#f8f9fb; border-radius:8px; font-size:12px; font-family:monospace; white-space:pre-wrap;"></div>
 
-        <!-- Debug-Bereich -->
-        <div class="help-section" style="margin-top: 12px;">
-            <h3>Diagnose</h3>
-            <p style="font-size:13px; color:#888; margin-bottom:10px;">
-                Falls das Widget nicht in CRM-Karten erscheint: App deinstallieren und neu installieren.
-            </p>
-            <button class="btn btn-sm" onclick="showDebugInfo()">Registrierungen prüfen</button>
-            <div id="debugOutput" style="display:none; margin-top:12px; padding:12px; background:#f8f9fb; border-radius:8px; font-size:12px; font-family:monospace; white-space:pre-wrap;"></div>
+        <!-- Hilfeseite (versteckt) -->
+        <div id="helpPage" style="display:none;">
+            <div class="help-section">
+                <h2>Anleitung: Abhängige Felder einrichten</h2>
+                <p style="color:#666; margin-bottom:20px;">
+                    Mit dieser App können Sie kaskadierende Feld-Abhängigkeiten in Ihren CRM-Karten erstellen.
+                    Wenn ein Benutzer einen bestimmten Wert in einem Feld auswählt, werden automatisch
+                    weitere relevante Felder angezeigt.
+                </p>
+
+                <hr style="border:none; border-top:1px solid #e0e5eb; margin:20px 0;">
+
+                <h3>Schritt 1: Benutzerdefinierte Felder vorbereiten</h3>
+                <p>Bevor Sie Abhängigkeiten konfigurieren, müssen die benötigten Felder bereits in Bitrix24 existieren.</p>
+                <div class="help-step">
+                    <div class="help-step-number">1.1</div>
+                    <div class="help-step-content">
+                        <strong>CRM-Karte öffnen</strong>
+                        <p>Gehen Sie zu <em>CRM &rarr; Deals</em> (oder Leads/Kontakte/Unternehmen) und öffnen Sie eine beliebige Karte.</p>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">1.2</div>
+                    <div class="help-step-content">
+                        <strong>Felder erstellen</strong>
+                        <p>Klicken Sie unten auf <em>"Feld erstellen"</em> und legen Sie alle Felder an, die Sie in Ihrer Abhängigkeitskette verwenden möchten.</p>
+                        <div class="help-tip">
+                            <strong>Wichtig:</strong> Das Startfeld (Elternfeld) muss vom Typ <em>"Liste"</em> (Auswahlliste) sein,
+                            damit Abhängigkeiten basierend auf den Listenwerten definiert werden können.
+                        </div>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">1.3</div>
+                    <div class="help-step-content">
+                        <strong>Listenwerte definieren</strong>
+                        <p>Füllen Sie die Auswahllisten mit den gewünschten Werten. Beispiel:</p>
+                        <div class="help-example">
+                            <strong>Feld:</strong> "Welches Parkett hat Kunde?"<br>
+                            <strong>Werte:</strong> Landhausdielen, Massivholzdielen, Fertigparkett, Mosaikparkett
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:none; border-top:1px solid #e0e5eb; margin:20px 0;">
+
+                <h3>Schritt 2: Widget-Feld zur CRM-Karte hinzufügen</h3>
+                <div class="help-step">
+                    <div class="help-step-number">2.1</div>
+                    <div class="help-step-content">
+                        <strong>Neues Feld vom Typ "Abhängige Felder" erstellen</strong>
+                        <p>In der CRM-Karte auf <em>"Feld erstellen"</em> klicken und den Typ <strong>"Abhängige Felder"</strong> auswählen.</p>
+                        <p>Geben Sie dem Feld einen Namen, z.B. "Parkett-Konfiguration".</p>
+                        <div class="help-tip">
+                            Dieses Feld ist das Widget, in dem die abhängigen Felder angezeigt werden.
+                            Es ersetzt nicht die eigentlichen Felder, sondern steuert deren kaskadierende Anzeige.
+                        </div>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">2.2</div>
+                    <div class="help-step-content">
+                        <strong>Feld zur Kartenansicht hinzufügen</strong>
+                        <p>Stellen Sie sicher, dass das neue Widget-Feld in der Kartenansicht sichtbar ist.
+                           Sie können es per Drag &amp; Drop in den gewünschten Bereich ziehen.</p>
+                    </div>
+                </div>
+
+                <hr style="border:none; border-top:1px solid #e0e5eb; margin:20px 0;">
+
+                <h3>Schritt 3: Abhängigkeiten konfigurieren</h3>
+                <div class="help-step">
+                    <div class="help-step-number">3.1</div>
+                    <div class="help-step-content">
+                        <strong>Entity-Typ wählen</strong>
+                        <p>Wechseln Sie oben auf dieser Seite zum gewünschten Tab (Deals, Leads, Kontakte, Unternehmen).</p>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">3.2</div>
+                    <div class="help-step-content">
+                        <strong>Neue Konfiguration erstellen</strong>
+                        <p>Klicken Sie auf <em>"+ Neue Konfiguration"</em> und vergeben Sie einen aussagekräftigen Namen.</p>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">3.3</div>
+                    <div class="help-step-content">
+                        <strong>Startfeld (Elternfeld) wählen</strong>
+                        <p>Wählen Sie im Dropdown das Feld, von dem die Abhängigkeitskette ausgehen soll.
+                           Es werden nur Auswahllisten-Felder angezeigt.</p>
+                        <div class="help-example">
+                            <strong>Beispiel:</strong> "Welches Parkett hat Kunde? [UF_CRM_...]"
+                        </div>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">3.4</div>
+                    <div class="help-step-content">
+                        <strong>Abhängigkeitsregeln definieren</strong>
+                        <p>Für jeden Wert des Startfelds können Sie festlegen:</p>
+                        <ul>
+                            <li><strong>Anzuzeigende Felder:</strong> Welche Felder sollen erscheinen, wenn dieser Wert ausgewählt wird? Klicken Sie auf <em>"+ Feld hinzufügen"</em> und wählen Sie die gewünschten Felder aus.</li>
+                            <li><strong>Pflichtfelder:</strong> Aktivieren Sie die Checkbox bei Feldern, die der Benutzer zwingend ausfüllen muss.</li>
+                        </ul>
+                        <div class="help-example">
+                            <strong>Beispiel:</strong><br>
+                            Wenn "Welches Parkett?" = <em>"Massivholzdielen"</em>:<br>
+                            &rarr; Zeige Feld "Welche Massivholzdielen hat Kunde?" (Pflicht)<br>
+                            &rarr; Zeige Feld "Holzart" (optional)
+                        </div>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">3.5</div>
+                    <div class="help-step-content">
+                        <strong>Verschachtelte Abhängigkeiten (optional)</strong>
+                        <p>Wenn ein angezeigtes Feld ebenfalls eine Auswahlliste ist, erscheint automatisch
+                           der Bereich <em>"Verschachtelte Abhängigkeiten"</em>. Dort können Sie weitere
+                           Unterabhängigkeiten definieren &ndash; beliebig tief.</p>
+                        <div class="help-example">
+                            <strong>Beispiel (3 Ebenen):</strong><br>
+                            Parkett = "Massivholzdielen"<br>
+                            &nbsp;&nbsp;&rarr; Massivholzdielen = "Eiche"<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&rarr; Zeige: "Oberflächenbehandlung", "Breite", "Länge"
+                        </div>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">3.6</div>
+                    <div class="help-step-content">
+                        <strong>Speichern</strong>
+                        <p>Klicken Sie oben rechts auf <em>"Speichern"</em>, um die Konfiguration zu sichern.</p>
+                        <div class="help-tip">
+                            <strong>Tipp:</strong> Sie können mehrere Konfigurationen pro Entity-Typ erstellen,
+                            z.B. eine für "Parkett-Typ" und eine andere für "Dienstleistungsart".
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:none; border-top:1px solid #e0e5eb; margin:20px 0;">
+
+                <h3>Schritt 4: Testen</h3>
+                <div class="help-step">
+                    <div class="help-step-number">4.1</div>
+                    <div class="help-step-content">
+                        <strong>CRM-Karte öffnen</strong>
+                        <p>Öffnen Sie einen Deal (oder Lead/Kontakt/Unternehmen) und suchen Sie das Widget-Feld
+                           "Abhängige Felder" in der Karte.</p>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">4.2</div>
+                    <div class="help-step-content">
+                        <strong>Startfeld ausfüllen</strong>
+                        <p>Im Widget wird das Startfeld angezeigt. Wählen Sie einen Wert aus &ndash;
+                           die abhängigen Felder erscheinen automatisch darunter.</p>
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="help-step-number">4.3</div>
+                    <div class="help-step-content">
+                        <strong>Werte eingeben</strong>
+                        <p>Füllen Sie die abhängigen Felder aus. Alle Werte werden automatisch in die
+                           nativen Bitrix24-Felder geschrieben und stehen für Filter, Berichte und
+                           Dokumentenvorlagen zur Verfügung.</p>
+                    </div>
+                </div>
+
+                <hr style="border:none; border-top:1px solid #e0e5eb; margin:20px 0;">
+
+                <h3>Häufige Fragen</h3>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Warum sehe ich mein Feld nicht in der Feld-Auswahl?</div>
+                    <div class="help-faq-a">Das Feld muss bereits als benutzerdefiniertes Feld in Bitrix24 angelegt sein, bevor es hier konfiguriert werden kann. Erstellen Sie es zuerst in der CRM-Karte.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Welche Feldtypen kann ich als Startfeld verwenden?</div>
+                    <div class="help-faq-a">Nur Felder vom Typ <strong>Liste</strong> (Auswahlliste), <strong>Ja/Nein</strong> oder <strong>CRM-Status</strong> können als Startfeld genutzt werden, da die Abhängigkeiten auf konkreten Auswahlwerten basieren.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Welche Feldtypen kann ich als abhängiges (Kind-)Feld verwenden?</div>
+                    <div class="help-faq-a">Alle Feldtypen werden unterstützt: Text, Zahl, Datum, Auswahlliste, Ja/Nein, Geld, URL usw.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Wie viele Verschachtelungsebenen sind möglich?</div>
+                    <div class="help-faq-a">Es gibt keine Begrenzung. Sie können beliebig tiefe Abhängigkeitsketten erstellen, solange die Zwischenfelder Auswahllisten sind.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Werden die Daten in den nativen Bitrix24-Feldern gespeichert?</div>
+                    <div class="help-faq-a"><strong>Ja.</strong> Alle Eingaben im Widget werden direkt in die originalen benutzerdefinierten Felder geschrieben. Sie können die Daten in Filtern, Berichten, Dokumentenvorlagen und Automatisierungsregeln verwenden.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Was passiert, wenn ich den Wert im Startfeld ändere?</div>
+                    <div class="help-faq-a">Die abhängigen Felder des vorherigen Wertes werden ausgeblendet. Bereits eingegebene Werte in den nativen Feldern bleiben erhalten, werden aber im Widget nicht mehr angezeigt.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Funktioniert die App auch mit Smart Processes?</div>
+                    <div class="help-faq-a">Ja, Smart Processes werden automatisch erkannt und als zusätzliche Tabs in den Einstellungen angezeigt.</div>
+                </div>
+
+                <div class="help-faq">
+                    <div class="help-faq-q">Das Widget zeigt "Keine Konfigurationen vorhanden" &ndash; was tun?</div>
+                    <div class="help-faq-a">Öffnen Sie diese Einstellungsseite, wechseln Sie zum richtigen Entity-Typ-Tab und erstellen Sie mindestens eine Konfiguration mit Startfeld und Regeln. Vergessen Sie nicht, auf "Speichern" zu klicken.</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -107,6 +309,23 @@
             Settings.init();
             BX24.fitWindow();
         });
+
+        function showPage(page) {
+            const settingsEls = [
+                document.getElementById('entityTabs'),
+                document.querySelector('.content-area')
+            ];
+            const helpEl = document.getElementById('helpPage');
+
+            if (page === 'help') {
+                settingsEls.forEach(el => el.style.display = 'none');
+                helpEl.style.display = 'block';
+            } else {
+                settingsEls.forEach(el => el.style.display = '');
+                helpEl.style.display = 'none';
+            }
+            BX24.fitWindow();
+        }
 
         async function showDebugInfo() {
             const output = document.getElementById('debugOutput');
