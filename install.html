@@ -9,73 +9,154 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding: 30px;
-            text-align: center;
             color: #333;
             background: #f5f7fa;
         }
         .install-box {
-            max-width: 500px;
-            margin: 40px auto;
+            max-width: 600px;
+            margin: 20px auto;
             background: #fff;
             border-radius: 12px;
-            padding: 40px;
+            padding: 30px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
-        h1 { font-size: 22px; margin-bottom: 10px; }
-        p { color: #666; line-height: 1.5; }
-        .status {
-            margin-top: 20px;
-            padding: 12px;
+        h1 { font-size: 22px; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #666; line-height: 1.5; text-align: center; margin-bottom: 20px; }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
             border-radius: 8px;
+            font-size: 14px;
+            background: #f8f9fb;
+        }
+        .step-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .step.pending .step-icon { color: #aaa; }
+        .step.running .step-icon { color: #1565c0; }
+        .step.success { background: #e8f5e9; }
+        .step.success .step-icon { color: #2e7d32; }
+        .step.error { background: #fce4ec; }
+        .step.error .step-icon { color: #c62828; }
+        .step.warning { background: #fff8e1; }
+        .step.warning .step-icon { color: #f57f17; }
+        .step-detail {
+            font-size: 11px;
+            color: #888;
+            margin-left: 34px;
+            margin-top: -4px;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
             font-weight: 500;
         }
-        .status.success { background: #e8f5e9; color: #2e7d32; }
-        .status.error { background: #fce4ec; color: #c62828; }
-        .status.loading { background: #e3f2fd; color: #1565c0; }
+        .result-box.success { background: #e8f5e9; color: #2e7d32; }
+        .result-box.error { background: #fce4ec; color: #c62828; }
         .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #1565c0;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #1565c0;
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="install-box">
-        <h1>Abhängige Felder</h1>
-        <p>Das Plugin wird installiert und konfiguriert...</p>
-        <div id="status" class="status loading">
-            <span class="spinner"></span> Installation läuft...
+        <h1>Abhängige Felder - Installation</h1>
+        <p class="subtitle">Das Plugin wird installiert und konfiguriert...</p>
+
+        <div id="steps">
+            <div class="step pending" id="step-userfield">
+                <div class="step-icon">&#9679;</div>
+                <span>Custom Field Type registrieren</span>
+            </div>
+            <div id="step-userfield-detail" class="step-detail" style="display:none;"></div>
+
+            <div class="step pending" id="step-placement-deal">
+                <div class="step-icon">&#9679;</div>
+                <span>Placement: Deal-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-placement-lead">
+                <div class="step-icon">&#9679;</div>
+                <span>Placement: Lead-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-placement-contact">
+                <div class="step-icon">&#9679;</div>
+                <span>Placement: Kontakt-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-placement-company">
+                <div class="step-icon">&#9679;</div>
+                <span>Placement: Unternehmen-Tab registrieren</span>
+            </div>
+            <div class="step pending" id="step-config">
+                <div class="step-icon">&#9679;</div>
+                <span>Standardkonfiguration anlegen</span>
+            </div>
         </div>
+
+        <div id="result" class="result-box" style="display:none;"></div>
     </div>
 
     <script>
         BX24.init(async function() {
-            const statusEl = document.getElementById('status');
+            const handlerUrl = getHandlerUrl('field.html');
+            let allSuccess = true;
+            let hasPlacement = false;
 
-            try {
-                // 1. Custom User Field Type registrieren
-                try {
-                    await callMethod('userfieldtype.add', {
-                        USER_TYPE_ID: 'depfields_widget',
-                        HANDLER: getHandlerUrl('field.html'),
-                        TITLE: 'Abhängige Felder',
-                        DESCRIPTION: 'Widget für abhängige/kaskadierende CRM-Felder'
+            // 1. Custom User Field Type registrieren
+            await runStep('step-userfield', async () => {
+                await callMethod('userfieldtype.add', {
+                    USER_TYPE_ID: 'depfields_widget',
+                    HANDLER: handlerUrl,
+                    TITLE: 'Abhängige Felder',
+                    DESCRIPTION: 'Widget für abhängige/kaskadierende CRM-Felder'
+                });
+            }, true); // allowFail = true (Typ existiert evtl. schon)
+
+            // Handler-URL anzeigen (Debug-Info)
+            const detailEl = document.getElementById('step-userfield-detail');
+            detailEl.style.display = 'block';
+            detailEl.textContent = 'Handler-URL: ' + handlerUrl;
+
+            // 2. Placements registrieren (Tabs in CRM-Karten)
+            const placements = [
+                { stepId: 'step-placement-deal', placement: 'CRM_DEAL_DETAIL_TAB' },
+                { stepId: 'step-placement-lead', placement: 'CRM_LEAD_DETAIL_TAB' },
+                { stepId: 'step-placement-contact', placement: 'CRM_CONTACT_DETAIL_TAB' },
+                { stepId: 'step-placement-company', placement: 'CRM_COMPANY_DETAIL_TAB' }
+            ];
+
+            for (const p of placements) {
+                const ok = await runStep(p.stepId, async () => {
+                    await callMethod('placement.bind', {
+                        PLACEMENT: p.placement,
+                        HANDLER: handlerUrl,
+                        TITLE: 'Abhängige Felder'
                     });
-                } catch (e) {
-                    // Typ existiert möglicherweise bereits - das ist OK
-                    if (!e.ex || !e.ex.error === 'ERROR_USERFIELD_TYPE_ALREADY_INSTALLED') {
-                        console.warn('UserFieldType Registrierung:', e);
-                    }
-                }
+                }, true);
+                if (ok) hasPlacement = true;
+            }
 
-                // 2. Standard-Konfiguration anlegen (falls noch nicht vorhanden)
+            // 3. Standardkonfiguration anlegen
+            await runStep('step-config', async () => {
                 const options = await callMethod('app.option.get');
                 if (!options || !options.depfields_deal) {
                     await callMethod('app.option.set', {
@@ -87,21 +168,60 @@
                         }
                     });
                 }
+            }, false);
 
-                statusEl.className = 'status success';
-                statusEl.innerHTML = '&#10003; Installation erfolgreich abgeschlossen!<br><br>' +
-                    '<small>Sie können die App jetzt über das Menü "Anwendungen" konfigurieren.<br>' +
-                    'Fügen Sie anschließend das Feld "Abhängige Felder" zu Ihren CRM-Karten hinzu.</small>';
+            // Ergebnis anzeigen
+            const resultEl = document.getElementById('result');
+            resultEl.style.display = 'block';
 
-                // Installation bei Bitrix24 abschließen
-                BX24.installFinish();
-
-            } catch (error) {
-                console.error('Installationsfehler:', error);
-                statusEl.className = 'status error';
-                statusEl.innerHTML = '&#10007; Installationsfehler: ' + (error.ex ? error.ex.error_description : error.message || error);
+            if (hasPlacement) {
+                resultEl.className = 'result-box success';
+                resultEl.innerHTML = '&#10003; Installation erfolgreich!<br><br>' +
+                    '<small>Der Tab "Abhängige Felder" erscheint jetzt in Ihren CRM-Karten (Deals, Leads, Kontakte, Unternehmen).<br>' +
+                    'Konfigurieren Sie die Feld-Abhängigkeiten über Anwendungen &rarr; Abhängige Felder.</small>';
+            } else {
+                resultEl.className = 'result-box error';
+                resultEl.innerHTML = '&#10007; Placements konnten nicht registriert werden.<br>' +
+                    '<small>Bitte prüfen Sie die App-Berechtigungen (placement, crm) und installieren Sie die App erneut.</small>';
             }
+
+            BX24.installFinish();
         });
+
+        async function runStep(stepId, fn, allowFail) {
+            const stepEl = document.getElementById(stepId);
+            stepEl.className = 'step running';
+            stepEl.querySelector('.step-icon').innerHTML = '<span class="spinner"></span>';
+
+            try {
+                await fn();
+                stepEl.className = 'step success';
+                stepEl.querySelector('.step-icon').innerHTML = '&#10003;';
+                return true;
+            } catch (e) {
+                const errMsg = e.ex ? e.ex.error_description || e.ex.error : (e.message || String(e));
+                const isAlreadyExists = errMsg.toLowerCase().includes('already') ||
+                    errMsg.toLowerCase().includes('exist') ||
+                    (e.ex && e.ex.error === 'ERROR_PLACEMENT_ALREADY_BINDED');
+
+                if (isAlreadyExists) {
+                    stepEl.className = 'step success';
+                    stepEl.querySelector('.step-icon').innerHTML = '&#10003;';
+                    stepEl.querySelector('span:last-child').textContent += ' (bereits vorhanden)';
+                    return true;
+                } else if (allowFail) {
+                    stepEl.className = 'step warning';
+                    stepEl.querySelector('.step-icon').innerHTML = '&#9888;';
+                    stepEl.querySelector('span:last-child').textContent += ' (' + errMsg + ')';
+                    return false;
+                } else {
+                    stepEl.className = 'step error';
+                    stepEl.querySelector('.step-icon').innerHTML = '&#10007;';
+                    stepEl.querySelector('span:last-child').textContent += ' (' + errMsg + ')';
+                    return false;
+                }
+            }
+        }
 
         function callMethod(method, params) {
             return new Promise((resolve, reject) => {
@@ -116,8 +236,7 @@
         }
 
         function getHandlerUrl(page) {
-            // Aktuelle URL als Basis nehmen und nur den Dateinamen ersetzen
-            const currentUrl = window.location.href;
+            const currentUrl = window.location.href.split('?')[0].split('#')[0];
             const basePath = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
             return basePath + page;
         }

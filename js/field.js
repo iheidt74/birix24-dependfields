@@ -1,6 +1,6 @@
 /**
  * CRM-Karten Widget - Abhängige Felder
- * Wird als Custom UserField Type in der CRM-Karte angezeigt
+ * Wird als Tab (placement.bind) oder Custom UserField in der CRM-Karte angezeigt
  */
 
 const FieldWidget = {
@@ -20,9 +20,13 @@ const FieldWidget = {
 
         try {
             // Placement-Info ermitteln
-            const placementInfo = await this.getPlacementInfo();
-            if (!placementInfo) {
-                this.showMessage('Kein CRM-Kontext gefunden.', 'warning');
+            const placementInfo = this.getPlacementInfo();
+
+            console.log('[DepFields] Placement-Info:', JSON.stringify(placementInfo));
+
+            if (!placementInfo || (!placementInfo.entityType && !placementInfo.entityId)) {
+                this.showMessage('Kein CRM-Kontext gefunden. Placement-Info: ' +
+                    JSON.stringify(placementInfo), 'warning');
                 return;
             }
 
@@ -30,7 +34,9 @@ const FieldWidget = {
             this.entityId = placementInfo.entityId;
 
             if (!this.entityType || !this.entityId) {
-                this.showMessage('Entity-Informationen nicht verfügbar.', 'warning');
+                this.showMessage('Entity-Typ: ' + (this.entityType || 'unbekannt') +
+                    ', Entity-ID: ' + (this.entityId || 'unbekannt') +
+                    ' - Informationen unvollständig.', 'warning');
                 return;
             }
 
@@ -69,55 +75,71 @@ const FieldWidget = {
      * Placement-Informationen auslesen
      */
     getPlacementInfo() {
-        return new Promise((resolve) => {
-            try {
-                // Versuche Placement-Info über BX24
-                const placement = BX24.placement.info();
+        try {
+            const placement = BX24.placement.info();
+            console.log('[DepFields] Raw placement:', JSON.stringify(placement));
 
-                if (placement && placement.options) {
-                    const opts = placement.options;
-                    let entityType = null;
-                    let entityId = null;
+            let entityType = null;
+            let entityId = null;
 
-                    // Entity-Typ aus ENTITY_ID oder ENTITY_VALUE_ID ermitteln
-                    if (opts.ENTITY_ID) {
-                        const parts = opts.ENTITY_ID.split('_');
-                        if (parts.length >= 2) {
-                            entityType = this.mapEntityPrefix(parts[0]);
-                            entityId = parts[parts.length - 1];
-                        }
-                    }
+            if (placement) {
+                const opts = placement.options || {};
 
-                    // Fallback: Direkte Felder
-                    if (!entityType && opts.ENTITY_VALUE_ID) {
-                        entityId = opts.ENTITY_VALUE_ID;
-                    }
-
-                    // Entity-Typ aus Kontext
-                    if (!entityType) {
-                        entityType = this.detectEntityType(placement);
-                    }
-
-                    resolve({ entityType, entityId });
-                    return;
+                // 1. CRM_*_DETAIL_TAB Placements: Entity-ID direkt in options.ID
+                if (opts.ID) {
+                    entityId = String(opts.ID);
                 }
 
-                // Fallback: URL-Parameter auslesen
-                const params = new URLSearchParams(window.location.search);
-                const entityType = this.mapEntityPrefix(params.get('ENTITY') || params.get('entity'));
-                const entityId = params.get('ID') || params.get('id') || params.get('ENTITY_VALUE_ID');
-                resolve({ entityType, entityId });
+                // 2. Fallback: ENTITY_VALUE_ID (Custom UserField Type)
+                if (!entityId && opts.ENTITY_VALUE_ID) {
+                    entityId = String(opts.ENTITY_VALUE_ID);
+                }
 
-            } catch (e) {
-                console.error('Placement Info Fehler:', e);
-                // Letzter Fallback: URL-Parameter
-                const params = new URLSearchParams(window.location.search);
-                resolve({
-                    entityType: this.mapEntityPrefix(params.get('ENTITY')),
-                    entityId: params.get('ID') || params.get('ENTITY_VALUE_ID')
-                });
+                // 3. Fallback: ENTITY_ID Format "CRM_DEAL_123"
+                if (opts.ENTITY_ID) {
+                    const parts = opts.ENTITY_ID.split('_');
+                    if (!entityId) {
+                        entityId = parts[parts.length - 1];
+                    }
+                    if (parts.length >= 2) {
+                        // Versuche Entity-Typ aus ENTITY_ID Prefix
+                        const prefix = parts.slice(0, -1).join('_');
+                        entityType = this.mapEntityPrefix(prefix);
+                    }
+                }
+
+                // 4. Entity-Typ aus Placement-Code erkennen (z.B. CRM_DEAL_DETAIL_TAB)
+                if (!entityType) {
+                    entityType = this.detectEntityType(placement);
+                }
+
+                // 5. Fallback: ENTITY_TYPE_NAME in options
+                if (!entityType && opts.ENTITY_TYPE_NAME) {
+                    entityType = this.mapEntityPrefix(opts.ENTITY_TYPE_NAME);
+                }
             }
-        });
+
+            // 6. Letzter Fallback: URL-Parameter
+            if (!entityType || !entityId) {
+                const params = new URLSearchParams(window.location.search);
+                if (!entityType) {
+                    entityType = this.mapEntityPrefix(params.get('ENTITY') || params.get('entity'));
+                }
+                if (!entityId) {
+                    entityId = params.get('ID') || params.get('id') || params.get('ENTITY_VALUE_ID');
+                }
+            }
+
+            return { entityType, entityId };
+
+        } catch (e) {
+            console.error('[DepFields] Placement Info Fehler:', e);
+            const params = new URLSearchParams(window.location.search);
+            return {
+                entityType: this.mapEntityPrefix(params.get('ENTITY')),
+                entityId: params.get('ID') || params.get('ENTITY_VALUE_ID')
+            };
+        }
     },
 
     /**
@@ -146,10 +168,16 @@ const FieldWidget = {
     detectEntityType(placement) {
         if (!placement) return null;
         const placementId = placement.placement || '';
+
         if (placementId.includes('DEAL')) return 'deal';
         if (placementId.includes('LEAD')) return 'lead';
         if (placementId.includes('CONTACT')) return 'contact';
         if (placementId.includes('COMPANY')) return 'company';
+
+        // Smart Process: CRM_DYNAMIC_XXX_DETAIL_TAB
+        const dynamicMatch = placementId.match(/CRM_DYNAMIC_(\d+)_DETAIL_TAB/);
+        if (dynamicMatch) return 'smart_' + dynamicMatch[1];
+
         return null;
     },
 
@@ -503,10 +531,15 @@ const FieldWidget = {
      */
     resizeFrame() {
         try {
-            const height = document.body.scrollHeight + 20;
-            BX24.resizeWindow(document.body.scrollWidth, height);
-        } catch (e) {
-            // Ignorieren wenn resize nicht verfügbar
+            // fitWindow passt sich automatisch an den Inhalt an
+            BX24.fitWindow();
+        } catch (e1) {
+            try {
+                const height = document.body.scrollHeight + 20;
+                BX24.resizeWindow(document.body.scrollWidth, height);
+            } catch (e2) {
+                // Ignorieren wenn resize nicht verfügbar
+            }
         }
     },
 

@@ -85,8 +85,18 @@
                 <li><strong>Konfiguration erstellen:</strong> Klicken Sie auf "Neue Konfiguration" und wählen Sie ein Startfeld (Auswahlliste).</li>
                 <li><strong>Regeln definieren:</strong> Für jeden Wert des Startfelds legen Sie fest, welche Felder angezeigt und welche als Pflicht markiert werden.</li>
                 <li><strong>Verschachtelung:</strong> Wenn ein angezeigtes Feld auch eine Auswahlliste ist, können Sie weitere Unterabhängigkeiten definieren.</li>
-                <li><strong>Benutzerfeld erstellen:</strong> Erstellen Sie in der CRM-Karte ein neues Feld vom Typ "Abhängige Felder" und fügen Sie es zur Kartenansicht hinzu.</li>
+                <li><strong>Tab in CRM-Karte:</strong> Nach der Installation erscheint automatisch der Tab "Abhängige Felder" in Ihren Deal-, Lead-, Kontakt- und Unternehmenskarten.</li>
             </ol>
+        </div>
+
+        <!-- Debug-Bereich -->
+        <div class="help-section" style="margin-top: 12px;">
+            <h3>Diagnose</h3>
+            <p style="font-size:13px; color:#888; margin-bottom:10px;">
+                Falls das Widget nicht in CRM-Karten erscheint: App deinstallieren und neu installieren.
+            </p>
+            <button class="btn btn-sm" onclick="showDebugInfo()">Registrierungen prüfen</button>
+            <div id="debugOutput" style="display:none; margin-top:12px; padding:12px; background:#f8f9fb; border-radius:8px; font-size:12px; font-family:monospace; white-space:pre-wrap;"></div>
         </div>
     </div>
 
@@ -97,6 +107,41 @@
             Settings.init();
             BX24.fitWindow();
         });
+
+        async function showDebugInfo() {
+            const output = document.getElementById('debugOutput');
+            output.style.display = 'block';
+            output.textContent = 'Lade...';
+
+            try {
+                const [placements, fieldTypes] = await Promise.all([
+                    B24.getRegisteredPlacements(),
+                    B24.getRegisteredFieldTypes()
+                ]);
+
+                let text = '=== Registrierte Placements ===\n';
+                if (placements && placements.length > 0) {
+                    placements.forEach(p => {
+                        text += '  ' + (p.placement || p.PLACEMENT || JSON.stringify(p)) + '\n';
+                    });
+                } else {
+                    text += '  (keine)\n';
+                }
+
+                text += '\n=== Registrierte UserField-Typen ===\n';
+                if (fieldTypes && fieldTypes.length > 0) {
+                    fieldTypes.forEach(t => {
+                        text += '  ' + (t.USER_TYPE_ID || JSON.stringify(t)) + ' → ' + (t.HANDLER || '') + '\n';
+                    });
+                } else {
+                    text += '  (keine)\n';
+                }
+
+                output.textContent = text;
+            } catch (e) {
+                output.textContent = 'Fehler: ' + (e.message || e);
+            }
+        }
     </script>
 </body>
 </html>

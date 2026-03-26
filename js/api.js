@@ -252,5 +252,31 @@ const B24 = {
      */
     generateId() {
         return 'df_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    },
+
+    // --- Debug-Hilfsfunktionen ---
+
+    /**
+     * Registrierte Placements abfragen
+     */
+    async getRegisteredPlacements() {
+        try {
+            return await this.callMethod('placement.list');
+        } catch (e) {
+            console.error('placement.list Fehler:', e);
+            return [];
+        }
+    },
+
+    /**
+     * Registrierte UserField-Typen abfragen
+     */
+    async getRegisteredFieldTypes() {
+        try {
+            return await this.callMethod('userfieldtype.list');
+        } catch (e) {
+            console.error('userfieldtype.list Fehler:', e);
+            return [];
+        }
     }
 };
